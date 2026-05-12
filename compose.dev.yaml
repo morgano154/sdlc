@@ -1,0 +1,62 @@
+# Module 3 — full development stack with hot-reloading via Compose Watch
+# Usage: docker compose -f compose.dev.yaml up --watch
+
+services:
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: taskflow
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d taskflow"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@local.dev
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  app:
+    build:
+      context: ./project
+      target: dev-deps         # uses the dev-deps stage so nodemon is available
+    image: taskflow-api:dev
+    command: ["npx", "nodemon", "--watch", "src"]
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: taskflow
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      NODE_ENV: development
+    ports:
+      - "3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+    # Compose Watch — sync source changes without rebuilding
+    develop:
+      watch:
+        - action: sync
+          path: ./project/src
+          target: /app/src
+        - action: rebuild
+          path: ./project/package.json
+
+volumes:
+  db_data:

@@ -1,0 +1,11 @@
+node_modules
+npm-debug.log*
+.env
+.env.*
+*.test.js
+tests/
+coverage/
+.git
+.gitignore
+README.md
+# Note: package-lock.json is intentionally NOT excluded — npm ci requires it
