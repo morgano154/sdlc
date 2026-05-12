@@ -95,3 +95,4 @@ initDb()
 // Export pool so tests can drain it cleanly before container shutdown
 module.exports = app;
 module.exports.pool = pool;
+// pipeline trigger Tue 12 May 2026 02:36:45 PM EEST
